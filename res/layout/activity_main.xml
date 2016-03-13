@@ -1,0 +1,108 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background" >
+
+    <ImageButton
+        android:id="@+id/imageButtonMainCancle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="2.5dp"
+        android:layout_marginTop="25.5dp"
+        android:background="@drawable/cancle" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="73.5dp"
+        android:src="@drawable/logo" />
+
+    <ImageView
+        android:id="@+id/imageViewMainNoSomkeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="50dp"
+        android:src="@drawable/nosmoke_text" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true" >
+
+        <ImageButton
+            android:id="@+id/imageButtonMain24"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="55dp"
+            android:background="@drawable/main_24" />
+
+        <ImageButton
+            android:id="@+id/imageButtonMainOpenTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="95dp"
+            android:layout_marginTop="0dp"
+            android:background="@drawable/main_open_time" />
+
+        <ImageButton
+            android:id="@+id/imageButtonMain7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="189.5dp"
+            android:layout_marginTop="55dp"
+            android:background="@drawable/main_7" />
+
+        <ImageButton
+            android:id="@+id/imageButtonMain90"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="189dp"
+            android:layout_marginTop="169dp"
+            android:background="@drawable/main_90" />
+
+        <ImageButton
+            android:id="@+id/imageButtonMainSetting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="94.5dp"
+            android:layout_marginTop="223.5dp"
+            android:background="@drawable/main_setting" />
+
+        <ImageButton
+            android:id="@+id/imageButtonMainHelp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="0dp"
+            android:layout_marginTop="169dp"
+            android:background="@drawable/main_help" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginLeft="115dp"
+            android:layout_marginTop="130.5dp"
+            android:src="@drawable/nosmoke_icon" />
+    </RelativeLayout>
+
+</RelativeLayout>
