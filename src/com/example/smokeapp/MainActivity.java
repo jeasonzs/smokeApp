@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.ColorMatrixColorFilter;
 import android.util.Log;
 import android.view.Menu;
@@ -38,7 +39,9 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         findViewById(R.id.imageButtonMainHelp).setOnTouchListener(this);
         findViewById(R.id.imageButtonMain7).setOnTouchListener(this);
         findViewById(R.id.imageButtonMain90).setOnTouchListener(this);
-        findViewById(R.id.imageButtonMainSetting).setOnTouchListener(this);    
+        findViewById(R.id.imageButtonMainSetting).setOnTouchListener(this);   
+
+
     }
     
     

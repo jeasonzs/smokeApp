@@ -103,14 +103,12 @@ public class DeviceListActivity extends Activity {
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // Get a set of currently paired devices
-        Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
-
+        //Set<BluetoothDevice> pairedDevices = mBtAdapter.getBondedDevices();
+        String targetDevice = BlueTooth.getInstance().getDeviceNameAndAddr();
         // If there are paired devices, add each one to the ArrayAdapter
-        if (pairedDevices.size() > 0) {
+        if (targetDevice.length() > 17) {
             findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
-            for (BluetoothDevice device : pairedDevices) {
-                mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-            }
+            mPairedDevicesArrayAdapter.add(targetDevice);
         } else {
             String noDevices = getResources().getText(R.string.none_paired).toString();
             mPairedDevicesArrayAdapter.add(noDevices);
@@ -161,15 +159,15 @@ public class DeviceListActivity extends Activity {
             // Get the device MAC address, which is the last 17 chars in the View
             String info = ((TextView) v).getText().toString();
             String address = info.substring(info.length() - 17);
-            
-            BlueTooth.getInstance().connect(address, false);
+            BlueTooth.getInstance().setDeviceNameAndAddr(info);
+            //BlueTooth.getInstance().connect();
 //            // Create the result Intent and include the MAC address
 //            Intent intent = new Intent();
 //            intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
 //
 //            // Set result and finish this Activity
 //            setResult(Activity.RESULT_OK, intent);
-//            finish();
+            finish();
         }
     };
 
@@ -185,9 +183,9 @@ public class DeviceListActivity extends Activity {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // If it's already paired, skip it, because it's been listed already
-                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                //if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
                     mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                }
+                //}
             // When discovery is finished, change the Activity title
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 setProgressBarIndeterminateVisibility(false);

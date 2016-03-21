@@ -20,18 +20,24 @@
         android:layout_marginBottom="50dp"
         android:src="@drawable/nosmoke_text" />
     
-    <ImageView
-        android:id="@+id/imageViewMenu24DataContent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:src="@drawable/sub_24_data_frame" />
+    <FrameLayout
+	    android:id="@+id/frameLayoutSub24DataContent"
+	    android:layout_width="335dp"
+	    android:layout_height="227.5dp"
+	    android:layout_centerHorizontal="true"
+	    android:layout_centerVertical="true"
+	    android:paddingLeft="38.5dp"
+	    android:paddingTop="51.5dp"
+	    android:paddingRight="38.5dp"
+	    android:paddingBottom="83.5dp"
+	    android:background="@drawable/sub_24_data_frame" >
+
+    </FrameLayout>
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/imageViewMenu24DataContent"
+        android:layout_above="@id/frameLayoutSub24DataContent"
         android:layout_centerHorizontal="true" 
         android:src="@drawable/sub_24" />
         
@@ -42,7 +48,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@id/imageViewMenu24DataContent"
+        android:layout_below="@id/frameLayoutSub24DataContent"
         android:background="@drawable/sub_return_icon" />
 
     

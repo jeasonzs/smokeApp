@@ -44,6 +44,7 @@ public class SubSettingActivity extends Activity implements View.OnTouchListener
 	        switch (v.getId()) {  
 	        	case R.id.imageButtonSubSettingReturn:
 	        		finish();
+	        		//BlueTooth.getInstance().getNextOpenTime(null);
 	        		break;
 	        	case R.id.imageButtonSubSettingItemBlueTooth:
 	                startActivityForResult(new Intent(this, DeviceListActivity.class), 2);
@@ -56,6 +57,7 @@ public class SubSettingActivity extends Activity implements View.OnTouchListener
 		            break;
 	        	case R.id.imageButtonSubSettingItemAboutUs:
 	                startActivity(new Intent(SubSettingActivity.this,SettingAboutUsActivity.class));
+	        		//BlueTooth.getInstance().getOpenLog(null);
 		            break;
 	        } 
     	}

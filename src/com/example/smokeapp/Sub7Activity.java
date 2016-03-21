@@ -1,6 +1,8 @@
 package com.example.smokeapp;
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.Menu;
@@ -13,9 +15,10 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class Sub7Activity extends Activity implements View.OnTouchListener {
-
+	private ChartView chartView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,10 +27,25 @@ public class Sub7Activity extends Activity implements View.OnTouchListener {
         ((ImageButton)findViewById(R.id.imageButtonSub7Return)).setOnTouchListener(this);   
         FrameLayout layout = (FrameLayout)findViewById(R.id.frameLayoutSub7DataContent);
         
-        ChartView chartView = new ChartView(this);
-        float[] data = {0.6f,0.1f,0.2f,0.5f,1.0f,0.1f,0.2f};
-        chartView.setData(1.0f, data);
+        chartView = new ChartView(this);
+        
         layout.addView(chartView);
+    }
+    
+    @Override
+    protected void onResume() {
+    	// TODO Auto-generated method stub
+    	BlueTooth.getInstance().getOpenLog(new Handler() {
+        	@Override
+        	public void handleMessage(Message msg) {
+        		// TODO Auto-generated method stub
+        		OpenLog openLog = (OpenLog)msg.obj;
+            	float[] data = openLog.get7();
+                chartView.setData(1.0f, data);
+        	}
+        });
+
+    	super.onResume();
     }
     
     public boolean onTouch(View v, MotionEvent event) {   

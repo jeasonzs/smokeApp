@@ -3,11 +3,20 @@ package com.example.smokeapp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketTimeoutException;
+import java.util.List;
 import java.util.UUID;
+
 
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,23 +28,34 @@ import android.os.Message;
 import android.util.Log;
 
 public class BlueTooth {
-	private final BluetoothAdapter mAdapter;
-	
-    private ConnectThread mConnectThread;
-    private ConnectedThread mConnectedThread;
-    
-    private Handler getNextOpenTimeHandler;
-    private Handler getOpenTimeHandler;
-    private Handler setOpenTimeHandler;
-    private Handler getOpenLogHandler;
-    private Handler restoreHandler;
-    
-    public static final byte BT_CMD_OPEN_TIME = 0x01;
+	public static final byte BT_CMD_OPEN_TIME = 0x01;
     public static final byte BT_CMD_OPEN_LOG = 0x02;
     public static final byte BT_CMD_OPEN_NEXT = 0x03;
     public static final byte BT_CMD_RESTORE = 0x04;
     public static final byte BT_OPT_SET = (byte) 0xb2;
-    public static final byte BT_OPT_GET = (byte) 0xb2;
+    public static final byte BT_OPT_GET = (byte) 0xb1;
+    
+    public static final String PREF_KEY_DEVICE_NAME_AND_ADDR= "prefKeyDeviceNameAndAddr";
+	private final BluetoothAdapter mAdapter;
+	private final static String TAG = "smoke";
+	private BluetoothGatt mBluetoothGatt;
+	
+	private int mConnectionState = STATE_DISCONNECTED;
+
+    private static final int STATE_DISCONNECTED = 0;
+    private static final int STATE_CONNECTING = 1;
+    private static final int STATE_CONNECTED = 2;
+	
+    private ConnectThread mConnectThread;
+    private ConnectedThread mConnectedThread;
+    
+    private Handler optHandler;
+
+    
+    private String deviceNameAndAddr; 
+    private byte[] datSend;
+    
+    private OpenLog openLog;
     
     // Unique UUID for this application
     private static final UUID MY_UUID_SECURE =
@@ -44,7 +64,9 @@ public class BlueTooth {
         UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
     
 	private BlueTooth() {
+		openLog = new OpenLog();
 		mAdapter = BluetoothAdapter.getDefaultAdapter();
+		deviceNameAndAddr = utils.getPrefString(PREF_KEY_DEVICE_NAME_AND_ADDR);
 	}  
     private static volatile BlueTooth instance = null;  
     public static BlueTooth getInstance() {  
@@ -58,30 +80,119 @@ public class BlueTooth {
            return instance;  
     } 
     
+    public synchronized void setDeviceNameAndAddr(String deviceAndAddr) {
+    	this.deviceNameAndAddr = deviceAndAddr;
+    	utils.setPrefString(PREF_KEY_DEVICE_NAME_AND_ADDR, deviceAndAddr);
+    }
     
+    public synchronized String getDeviceNameAndAddr() {
+    	return utils.getPrefString(PREF_KEY_DEVICE_NAME_AND_ADDR);
+    }
     
 
-    public synchronized void connect(String address, boolean secure) {
-    	BluetoothDevice device = mAdapter.getRemoteDevice(address);
-        if (mConnectThread != null) {
-        	mConnectThread.cancel(); 
-        	mConnectThread = null;
-        }
-        if (mConnectedThread != null) {
-        	mConnectedThread.cancel(); 
-        	mConnectedThread = null;
-        }
-        mConnectThread = new ConnectThread(device, secure);
-        mConnectThread.start();
+    private synchronized void sendData() {
+    	if(deviceNameAndAddr == null || mAdapter == null) {
+    		return;
+    	}	
+    	if(mConnectedThread == null) {
+    		String address = deviceNameAndAddr.substring(deviceNameAndAddr.length() - 17);
+        	BluetoothDevice device = mAdapter.getRemoteDevice(address);
+//	        mConnectThread = new ConnectThread(device, true);
+//	        mConnectThread.start();
+        	mBluetoothGatt = device.connectGatt(null, false, mGattCallback);
+    	}
+    	else {
+    		write(datSend);
+    	}
     }
+    
+    
+    
+    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            String intentAction;
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+//                intentAction = ACTION_GATT_CONNECTED;
+//                mConnectionState = STATE_CONNECTED;
+//                broadcastUpdate(intentAction);
+                Log.i(TAG, "Connected to GATT server.");
+                // Attempts to discover services after successful connection.
+                Log.i(TAG, "Attempting to start service discovery:" +
+                        mBluetoothGatt.discoverServices());
+
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+//                intentAction = ACTION_GATT_DISCONNECTED;
+//                mConnectionState = STATE_DISCONNECTED;
+                Log.i(TAG, "Disconnected from GATT server.");
+//                broadcastUpdate(intentAction);
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+               // broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+            	List<BluetoothGattService> gattServices = mBluetoothGatt.getServices();
+            	for (BluetoothGattService gattService : gattServices) {
+            		String uuid= gattService.getUuid().toString();
+            		//Log.w(TAG, "gattService: " + uuid);
+            		if(uuid.equals("0000ffe0-0000-1000-8000-00805f9b34fb")) {
+            			List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
+            			for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+            				uuid =  gattCharacteristic.getUuid().toString();
+            				Log.w(TAG, "gattCharacteristic: " + uuid);
+            				mBluetoothGatt.setCharacteristicNotification(gattCharacteristic, true);
+            			}
+            		}
+            		
+            		if(uuid.equals("0000ffe5-0000-1000-8000-00805f9b34fb")) {
+            			List<BluetoothGattCharacteristic> gattCharacteristics = gattService.getCharacteristics();
+            			for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+            				uuid =  gattCharacteristic.getUuid().toString();
+            				Log.w(TAG, "gattCharacteristic: " + uuid);
+            				gattCharacteristic.setValue(datSend);
+            				mBluetoothGatt.writeCharacteristic(gattCharacteristic);
+            			}
+            		}
+
+            	}
+            	
+            } else {
+                Log.w(TAG, "onServicesDiscovered received: " + status);
+            }
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt,
+                                         BluetoothGattCharacteristic characteristic,
+                                         int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+               // broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            	Log.w(TAG, "onCharacteristicRead received: " + status);
+            }
+            Log.w(TAG, "onCharacteristicRead received: " + status);
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt,
+                                            BluetoothGattCharacteristic characteristic) {
+           // broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+        	Log.w(TAG, "onCharacteristicChanged received: ");
+        }
+        @Override
+        public void onCharacteristicWrite (BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status){
+        	Log.w(TAG, "onCharacteristicWrite: " + status+","+BluetoothGatt.GATT_SUCCESS);
+        }
+    };
+
     
     /**
      * Start the ConnectedThread to begin managing a Bluetooth connection
      * @param socket  The BluetoothSocket on which the connection was made
      * @param device  The BluetoothDevice that has been connected
      */
-    public synchronized void connected(BluetoothSocket socket, BluetoothDevice
-            device, final String socketType) {
+    public synchronized void connected(BluetoothSocket socket, final String socketType) {
         if (mConnectThread != null) {mConnectThread.cancel(); mConnectThread = null;}
         if (mConnectedThread != null) {mConnectedThread.cancel(); mConnectedThread = null;}
         // Start the thread to manage the connection and perform transmissions
@@ -90,9 +201,9 @@ public class BlueTooth {
     }
     
 
-    private byte xorCheck(byte[] dat,int len) {
+    private byte xorCheck(byte[] dat) {
 		byte ret = 0;
-		for (int i = 0; i < len; i++) {
+		for (int i = 3; i < dat.length-1; i++) {
 			ret^=dat[i]; 
 		}
 		return ret;
@@ -104,60 +215,74 @@ public class BlueTooth {
 	}
     
     public void getNextOpenTime(Handler handler) {
-    	getNextOpenTimeHandler = handler;
-    	byte[] dat = new byte[6];
-    	fillBtHeader(dat);
-    	dat[2] = 2;
-    	dat[3] = BT_OPT_GET;
-    	dat[4] = BT_CMD_OPEN_NEXT;
-    	dat[5] = xorCheck(dat,5);
-    	mConnectedThread.write(dat);
+    	optHandler = handler;
+    	datSend = new byte[6];
+    	fillBtHeader(datSend);
+    	datSend[2] = 2;
+    	datSend[3] = BT_OPT_GET;
+    	datSend[4] = BT_CMD_OPEN_NEXT;
+    	datSend[5] = xorCheck(datSend);
+    	sendData();
+    	
     }
-    public void getOpenTime(Handler handler) {
-    	getOpenTimeHandler = handler;
-    	byte[] dat = new byte[6];
-    	fillBtHeader(dat);
-    	dat[2] = 2;
-    	dat[3] = BT_OPT_GET;
-    	dat[4] = BT_CMD_OPEN_TIME;
-    	dat[5] = xorCheck(dat,5);
-    	mConnectedThread.write(dat);
-    }
-    public void setOpenTime(Handler handler,int time,int add) {
-    	setOpenTimeHandler = handler;
-    	byte[] dat = new byte[8];
-    	fillBtHeader(dat);
-    	dat[2] = 4;
-    	dat[3] = BT_OPT_SET;
-    	dat[4] = BT_CMD_OPEN_TIME;
-    	dat[5] = (byte)time;
-    	dat[6] = (byte)add;
-    	dat[7] = xorCheck(dat,7);
-    	mConnectedThread.write(dat);
-    }
+//    public void getOpenTime(Handler handler) {
+//    	openTimeHandler = handler;
+//    	byte[] dat = new byte[6];
+//    	fillBtHeader(dat);
+//    	dat[2] = 2;
+//    	dat[3] = BT_OPT_GET;
+//    	dat[4] = BT_CMD_OPEN_TIME;
+//    	dat[5] = xorCheck(dat);
+//    	mConnectedThread.write(dat);
+//    }
+//    public void setOpenTime(Handler handler,int time,int add) {
+//    	openTimeHandler = handler;
+//    	byte[] dat = new byte[8];
+//    	fillBtHeader(dat);
+//    	dat[2] = 4;
+//    	dat[3] = BT_OPT_SET;
+//    	dat[4] = BT_CMD_OPEN_TIME;
+//    	dat[5] = (byte)time;
+//    	dat[6] = (byte)add;
+//    	dat[7] = xorCheck(dat);
+//    	mConnectedThread.write(dat);
+//    }
     public void getOpenLog(Handler handler) {
-    	getOpenLogHandler = handler;
-    	byte[] dat = new byte[8];
-    	fillBtHeader(dat);
-    	dat[2] = 2;
-    	dat[3] = BT_OPT_GET;
-    	dat[4] = BT_CMD_OPEN_LOG;
-    	dat[5] = xorCheck(dat,5);
-    	mConnectedThread.write(dat);
+    	optHandler = handler;
+    	datSend = new byte[6];
+    	fillBtHeader(datSend);
+    	datSend[2] = 2;
+    	datSend[3] = BT_OPT_GET;
+    	datSend[4] = BT_CMD_OPEN_LOG;
+    	datSend[5] = xorCheck(datSend);
+    	sendData();
+    	openLog.randTest(90, 2048);
+    	//optHandler.obtainMessage(BT_CMD_OPEN_NEXT, dat[5], 0).sendToTarget();
+    	optHandler.obtainMessage(BT_CMD_OPEN_LOG, openLog).sendToTarget();
     }
-    public void restore(Handler handler) {
-    	restoreHandler = handler;
-    	byte[] dat = new byte[8];
-    	fillBtHeader(dat);
-    	dat[2] = 2;
-    	dat[3] = BT_OPT_SET;
-    	dat[4] = BT_CMD_RESTORE;
-    	dat[5] = xorCheck(dat,5);
-    	mConnectedThread.write(dat);
+//    public void restore(Handler handler) {
+//    	restoreHandler = handler;
+//    	byte[] dat = new byte[8];
+//    	fillBtHeader(dat);
+//    	dat[2] = 2;
+//    	dat[3] = BT_OPT_SET;
+//    	dat[4] = BT_CMD_RESTORE;
+//    	dat[5] = xorCheck(dat);
+//    	mConnectedThread.write(dat);
+//    }
+    
+    
+    public void write(byte[] out) {
+        // Create temporary object
+        ConnectedThread r;
+        // Synchronize a copy of the ConnectedThread
+        synchronized (this) {
+//            if (mState != STATE_CONNECTED) return;
+            r = mConnectedThread;
+        }
+        // Perform the write unsynchronized
+        r.write(out);
     }
-    
-    
-    
     
     /**
      * This thread runs while attempting to make an outgoing connection
@@ -165,12 +290,10 @@ public class BlueTooth {
      * succeeds or fails.
      */
     private class ConnectThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final BluetoothDevice mmDevice;
+        private BluetoothSocket mmSocket;
         private String mSocketType;
 
         public ConnectThread(BluetoothDevice device, boolean secure) {
-            mmDevice = device;
             BluetoothSocket tmp = null;
             mSocketType = secure ? "Secure" : "Insecure";
             try {
@@ -182,6 +305,7 @@ public class BlueTooth {
                             MY_UUID_INSECURE);
                 }
             } catch (IOException e) {
+            	return;
             }
             mmSocket = tmp;
         }
@@ -199,12 +323,12 @@ public class BlueTooth {
                 }
                 return;
             }
-
+            
             // Reset the ConnectThread because we're done
             synchronized (this) {
                 mConnectThread = null;
             }
-            connected(mmSocket, mmDevice, mSocketType);
+            connected(mmSocket, mSocketType);
         }
 
         public void cancel() {
@@ -216,6 +340,17 @@ public class BlueTooth {
         }
     }
 
+    private void handlePkg(byte[] dat,int len) {
+    	switch(dat[4]) {
+    	case BT_CMD_OPEN_NEXT:
+    		if(optHandler != null) {
+    			optHandler.obtainMessage(BT_CMD_OPEN_NEXT, dat[5], 0).sendToTarget();
+    		}
+    		break;
+    	}
+    }
+    
+    
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
@@ -233,6 +368,7 @@ public class BlueTooth {
             }
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+            write(datSend);
         }
 
         public void run() {
@@ -241,21 +377,19 @@ public class BlueTooth {
             while (true) {
                 try {
                     bytes = mmInStream.read(buffer);
-//                    mHandler.obtainMessage(BluetoothChat.MESSAGE_READ, bytes, -1, buffer)
-//                            .sendToTarget();
+                    handlePkg(buffer,bytes);
+                    break;
                 } catch (IOException e) {
                 	//restart
                     break;
                 }
             }
+            cancel();
+            mConnectedThread = null;
         }
         public void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
-//
-//                // Share the sent message back to the UI Activity
-//                mHandler.obtainMessage(BluetoothChat.MESSAGE_WRITE, -1, -1, buffer)
-//                        .sendToTarget();
             } catch (IOException e) {
             }
         }

@@ -2,6 +2,7 @@ package com.example.smokeapp;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
@@ -31,11 +32,13 @@ public class SplashActivity extends Activity  {
 //        imageView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT));  
 //        imageView.setImageResource(R.drawable.splash);  
 //        layout.addView(imageView);
+		SharedPreferences pref = getSharedPreferences(utils.PREFS_NAME, MODE_PRIVATE);
+		utils.setSharedPreferences(pref);
         
         new Handler().postDelayed(new Runnable() {
             public void run() {
                 /* Create an Intent that will start the Main WordPress Activity. */
-                Intent mainIntent = new Intent(SplashActivity.this, SubSettingActivity.class);
+                Intent mainIntent = new Intent(SplashActivity.this, MainActivity.class);
                 startActivity(mainIntent);
                 finish();
             }
