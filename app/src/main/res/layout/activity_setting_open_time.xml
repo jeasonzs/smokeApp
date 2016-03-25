@@ -19,19 +19,38 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="50dp"
         android:src="@drawable/nosmoke_text" />
-    
-    <ImageView
-        android:id="@+id/imageViewSettingOpenTimeDataContent"
+
+    <RelativeLayout
+        android:id="@+id/frameLayoutSettingOpenTimeDataContent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:src="@drawable/setting_open_time_data_frame" />
+        android:layout_centerInParent="true"
+        android:background="@drawable/setting_open_time_data_frame">
+        <TextView
+            android:id="@+id/textViewSettingOpenTimeDataContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="35dp"
+            android:textColor="#ffffffff"
+            android:text="0"
+            android:textSize="50sp" />
+        <TextView
+            android:id="@+id/textViewSettingOpenTimeAddDataContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="170dp"
+            android:textColor="#ffffffff"
+            android:text="0"
+            android:textSize="50sp" />
+    </RelativeLayout>
+
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/imageViewSettingOpenTimeDataContent"
+        android:layout_above="@id/frameLayoutSettingOpenTimeDataContent"
         android:layout_centerHorizontal="true" 
         android:src="@drawable/setting_open_time" />
         
@@ -40,7 +59,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:layout_below="@id/imageViewSettingOpenTimeDataContent"
+        android:layout_below="@id/frameLayoutSettingOpenTimeDataContent"
         android:orientation="horizontal" >
         
 	    <ImageButton

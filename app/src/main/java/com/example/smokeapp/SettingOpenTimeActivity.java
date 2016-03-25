@@ -44,7 +44,14 @@ public class SettingOpenTimeActivity extends Activity implements View.OnTouchLis
 	        } 
     	}
         return true;
-    } 
+    }
+
+    @Override
+    protected void onResume() {
+        ((TextView)findViewById(R.id.textViewSettingOpenTimeDataContent)).setText("128");
+        ((TextView)findViewById(R.id.textViewSettingOpenTimeAddDataContent)).setText("5");
+        super.onResume();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

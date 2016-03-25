@@ -29,6 +29,7 @@
         android:background="@drawable/sub_open_time_data_frame"
         android:gravity="center"
         android:textColor="#ffffffff"
+        android:text="0"
         android:textSize="50sp" />
 
     <ImageView
